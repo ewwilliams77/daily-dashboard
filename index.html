@@ -126,12 +126,14 @@ input, button, textarea, select { font-family: var(--font); }
 .deal-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1.8; cursor: text; min-width: 0; }
 .deal-stage-wrap { flex: 1; display: flex; }
 .deal-stage { font-family: var(--mono); font-size: 9.5px; font-weight: 500; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.05em; cursor: text; white-space: nowrap; }
-.s-marketing { background: #c8e6f0; color: #0d3d52; border: 1px solid #8ec8e0; }
+.s-marketing { background: #b8eacc; color: #0d3d1e; border: 1px solid #6dcf94; }
 .s-loi { background: #fde6b0; color: #5a3a00; border: 1px solid #f5c040; }
 .s-contract { background: #b8eacc; color: #0d3d1e; border: 1px solid #6dcf94; }
 .s-dd { background: #e0ceef; color: #3a1060; border: 1px solid #b48ed8; }
 .s-closed { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
 .s-default { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.s-bov { background: #c8e6f0; color: #0d3d52; border: 1px solid #8ec8e0; }
+.s-premarketing { background: #e0ceef; color: #3a1060; border: 1px solid #b48ed8; }
 .deal-next { font-size: 12px; color: var(--text2); flex: 2; cursor: text; min-width: 0; }
 .deal-row:hover:not(.is-done) .deal-del { display: block; }
 .deal-del { background: none; border: none; color: var(--faint); font-size: 15px; cursor: pointer; padding: 0 2px; display: none; transition: color 0.15s; line-height: 1; }
@@ -397,7 +399,7 @@ const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Satur
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const GREETINGS = ["let's close deals.","time to move iron.","who's calling back today?","deals don't call themselves.","make it count."];
 const SVG_CHK = () => `<svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const STAGE_MAP = {'marketing':'s-marketing','loi':'s-loi','under contract':'s-contract','contract':'s-contract','due diligence':'s-dd','dd':'s-dd','closed':'s-closed'};
+const STAGE_MAP = {'marketing':'s-marketing','loi':'s-loi','under contract':'s-contract','contract':'s-contract','due diligence':'s-dd','dd':'s-dd','closed':'s-closed','bov':'s-bov','pre-marketing':'s-premarketing','pre marketing':'s-premarketing'};
 const stageClass = s => STAGE_MAP[(s||'').toLowerCase().trim()] || 's-default';
 const dateStamp = () => { const n=new Date(); return `${MONTHS[n.getMonth()].slice(0,3)} ${n.getDate()}`; };
 
