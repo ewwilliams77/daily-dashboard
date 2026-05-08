@@ -27,7 +27,6 @@
 html, body { font-family: var(--font); font-size: 14px; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
 input, button, textarea, select { font-family: var(--font); }
 
-/* VIEWS */
 .view { display: none; }
 .view.active { display: block; }
 .shell { max-width: 1140px; margin: 0 auto; padding: 2rem 2rem 6rem; }
@@ -77,7 +76,6 @@ input, button, textarea, select { font-family: var(--font); }
 .prog-bar-wrap { height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 8px; width: 100px; margin-left: auto; }
 .prog-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
 
-/* SHARED */
 .slabel { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; font-weight: 500; }
 .slabel::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
@@ -295,7 +293,7 @@ input, button, textarea, select { font-family: var(--font); }
     <div class="news-panels">
       <div class="news-panel">
         <div class="news-panel-header">
-          <span class="news-panel-label global">Global News</span>
+          <span class="news-panel-label global">Global / Markets</span>
           <button class="news-refresh" onclick="fetchGlobalNews()" title="Refresh">&#8635;</button>
         </div>
         <div class="news-list" id="global-news-list">
@@ -304,7 +302,7 @@ input, button, textarea, select { font-family: var(--font); }
       </div>
       <div class="news-panel">
         <div class="news-panel-header">
-          <span class="news-panel-label mf">Multifamily News</span>
+          <span class="news-panel-label mf">Institutional CRE</span>
           <button class="news-refresh" onclick="fetchMFNews()" title="Refresh">&#8635;</button>
         </div>
         <div class="news-list" id="mf-news-list">
@@ -456,7 +454,6 @@ const defaultState = () => ({
 
 let state = defaultState();
 let arcFilter = 'all';
-let newsItems = [], newsIdx = 0;
 
 function load(){ try{ const s=localStorage.getItem(KEY); if(s){state=JSON.parse(s); if(!state.archive)state.archive=[];} }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); updateBadge(); }catch(e){} }
@@ -475,7 +472,6 @@ function inlineEdit(el2,current,onSave,isDiv=false){
   i.addEventListener('keydown',e=>{ if(e.key==='Enter') i.blur(); if(e.key==='Escape') onSave(current); });
 }
 
-// VIEW SWITCHING
 function showDash(){ document.getElementById('view-dash').classList.add('active'); document.getElementById('view-arc').classList.remove('active'); window.scrollTo(0,0); }
 function showArchive(){
   document.getElementById('view-arc').classList.add('active');
@@ -486,7 +482,6 @@ function showArchive(){
   renderArchive(); window.scrollTo(0,0);
 }
 
-// HEADER
 function setDate(){
   const now=new Date();
   document.getElementById('date-line').textContent=`${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
@@ -501,25 +496,41 @@ function updateProgress(){
   document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
 }
 
-const TWELVE_KEY = '2d0f6b485aba4f29a7b9e1d4e6fd94fb';
+// ── 10YR TREASURY ──────────────────────────────────────────────────────────────
+// Uses FRED (St. Louis Fed) — fully open CORS, no proxy needed.
+// Key is pre-filled. Falls back to "—" cleanly if unavailable.
+const FRED_KEY = '715ba73f9f5556efc495efe377aa58f6';
+
 async function fetchTreasury(){
   const rateEl = document.getElementById('tsy-rate');
-  const chgEl = document.getElementById('tsy-chg');
-  try{
-    const r = await fetch(`https://api.twelvedata.com/quote?symbol=TNX&apikey=${TWELVE_KEY}`);
-    const j = await r.json();
-    if(!j.close) throw new Error('no data');
-    const cur = parseFloat(j.close);
-    const prev = parseFloat(j.previous_close || j.close);
-    const chg = cur - prev;
+  const chgEl  = document.getElementById('tsy-chg');
+  try {
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&file_type=json&sort_order=desc&limit=3`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    // Filter out missing-value placeholders (".")
+    const obs  = (json.observations || []).filter(o => o.value !== '.');
+    if(!obs.length) throw new Error('no data');
+    const cur  = parseFloat(obs[0].value);
+    const prev = obs.length > 1 ? parseFloat(obs[1].value) : null;
     rateEl.textContent = cur.toFixed(2) + '%';
-    if(Math.abs(chg)<0.001){ chgEl.textContent=''; chgEl.className='tsy-chg flat'; }
-    else if(chg>0){ chgEl.textContent='▲ +'+chg.toFixed(2); chgEl.className='tsy-chg up'; }
-    else{ chgEl.textContent='▼ '+chg.toFixed(2); chgEl.className='tsy-chg dn'; }
-  }catch(e){ rateEl.textContent='—'; chgEl.textContent=''; }
+    if(prev !== null){
+      const diff = cur - prev;
+      if(Math.abs(diff) < 0.001){
+        chgEl.textContent = 'unch'; chgEl.className = 'tsy-chg flat';
+      } else {
+        chgEl.textContent = (diff > 0 ? '+' : '') + diff.toFixed(2);
+        chgEl.className   = 'tsy-chg ' + (diff > 0 ? 'up' : 'dn');
+      }
+    }
+  } catch(e) {
+    rateEl.textContent = '—';
+    chgEl.textContent  = '';
+    chgEl.className    = 'tsy-chg flat';
+  }
 }
 
-// NEWS — NewsData.io explicitly supports CORS from browser requests
+// ── NEWS — NewsData.io ──────────────────────────────────────────────────────────
 const NEWSDATA_KEY = 'pub_c6f650b7fade4c7bb6299518dd834700';
 
 function renderNewsList(containerId, items){
@@ -528,9 +539,9 @@ function renderNewsList(containerId, items){
   if(!items.length){ container.innerHTML = '<div class="news-loading-msg">No headlines available</div>'; return; }
   items.forEach(a => {
     const link = mk('a','news-item'); link.href = a.url; link.target = '_blank'; link.rel = 'noopener';
-    const dot = mk('div','news-item-dot');
+    const dot  = mk('div','news-item-dot');
     const body = mk('div','news-item-body');
-    const hl = mk('span','news-item-hl'); hl.textContent = a.title;
+    const hl   = mk('span','news-item-hl'); hl.textContent = a.title;
     const meta = mk('span','news-item-meta'); meta.textContent = a.source + (a.date ? ' · ' + a.date : '');
     body.appendChild(hl); body.appendChild(meta);
     link.appendChild(dot); link.appendChild(body);
@@ -538,48 +549,58 @@ function renderNewsList(containerId, items){
   });
 }
 
+// Global / Markets: S&P 500, Fed, Treasury, geopolitics, macro
 async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
-  try{
-    const q = encodeURIComponent('"S&P 500" OR "Federal Reserve" OR "US Treasury" OR "interest rates" OR "geopolitical" OR "oil prices" OR "NATO" OR "inflation" OR "bond market" OR "stock market" OR "trade war"');
-const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
-    const r = await fetch(url);
-    const j = await r.json();
+  try {
+    const q = encodeURIComponent(
+      '"S&P 500" OR "Federal Reserve" OR "interest rates" OR "US Treasury" OR "10-year yield" OR "inflation" OR "geopolitical" OR "oil prices" OR "trade war" OR "tariffs" OR "recession" OR "GDP"'
+    );
+    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
+    const r   = await fetch(url);
+    const j   = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
-    const items = j.results.map(a => ({
-      title: a.title,
-      url: a.link,
-      source: a.source_id || a.source_name || '',
-      date: a.pubDate ? a.pubDate.slice(0,10) : ''
-    }));
+    // Deduplicate by domain and take top 3
+    const seen = new Set(); const items = [];
+    for(const a of j.results){
+      if(items.length >= 3) break;
+      const domain = (a.source_id||'').toLowerCase();
+      if(seen.has(domain)) continue;
+      seen.add(domain);
+      items.push({ title: a.title, url: a.link, source: a.source_id || '', date: a.pubDate ? a.pubDate.slice(0,10) : '' });
+    }
     renderNewsList('global-news-list', items);
-  }catch(e){
-    container.innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
+  } catch(e) {
+    document.getElementById('global-news-list').innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
   }
 }
 
+// Institutional CRE: large-scale multifamily, BTR, institutional funds, major JVs
 async function fetchMFNews(){
   const container = document.getElementById('mf-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
-  try{
-   const q = encodeURIComponent('Blackstone OR BREIT OR "joint venture" OR "institutional multifamily" OR "build-to-rent" OR "BTR" OR "Sun Belt multifamily" OR "Greystar" OR "AvalonBay" OR "equity residential" OR "apartment REIT" OR "multifamily fund"');
-const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
-    const r = await fetch(url);
-    const j = await r.json();
+  try {
+    const q = encodeURIComponent(
+      'BREIT OR "Blackstone Real Estate" OR "build-to-rent" OR "institutional multifamily" OR "multifamily fund" OR "joint venture" OR "apartment REIT" OR "Greystar" OR "Tricon" OR "AMH" OR "invitation homes" OR "multifamily acquisition" OR "cap rate" OR "Class A apartments"'
+    );
+    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
+    const r   = await fetch(url);
+    const j   = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
-    const items = j.results.map(a => ({
-      title: a.title,
-      url: a.link,
-      source: a.source_id || a.source_name || '',
-      date: a.pubDate ? a.pubDate.slice(0,10) : ''
-    }));
+    const seen = new Set(); const items = [];
+    for(const a of j.results){
+      if(items.length >= 3) break;
+      const domain = (a.source_id||'').toLowerCase();
+      if(seen.has(domain)) continue;
+      seen.add(domain);
+      items.push({ title: a.title, url: a.link, source: a.source_id || '', date: a.pubDate ? a.pubDate.slice(0,10) : '' });
+    }
     renderNewsList('mf-news-list', items);
-  }catch(e){
-    container.innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
+  } catch(e) {
+    document.getElementById('mf-news-list').innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
   }
 }
-
 
 // TOP 3
 function renderTop3(){
@@ -636,8 +657,7 @@ function renderTop3(){
 function renderDeals(){
   const list=document.getElementById('deal-list'); list.innerHTML='';
   state.deals.forEach((d,i)=>{
-    const row=mk('deal-row'+(d.done?' is-done':''));
-    row.className='deal-row'+(d.done?' is-done':'');
+    const row=mk('div','deal-row'+(d.done?' is-done':''));
     const cb=mk('div','deal-cb'+(d.done?' chk':'')); cb.innerHTML=SVG_CHK();
     cb.addEventListener('click',()=>{ state.deals[i].done=!d.done; save(); renderDeals(); }); row.appendChild(cb);
     const name=mk('div','deal-name'); name.textContent=d.name;
@@ -852,10 +872,8 @@ function renderArchive(){
 }
 function clearArchive(){ if(confirm('Permanently delete all archived items?')){ state.archive=[]; save(); renderArchive(); } }
 
-// RESET
 function confirmReset(){ if(confirm('Reset everything including archive?')){ state=defaultState(); save(); init(); } }
 
-// INIT — all event listeners wired here after DOM is ready
 function init(){
   setDate(); fetchTreasury(); fetchGlobalNews(); fetchMFNews();
   renderTop3(); renderDeals(); renderWeek(); renderIntel(); renderInbox(); renderCadence(); initNotes(); updateBadge();
