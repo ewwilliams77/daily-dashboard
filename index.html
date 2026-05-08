@@ -501,21 +501,22 @@ function updateProgress(){
   document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
 }
 
-// TREASURY — rate.sx is fully open, explicit CORS support
+const TWELVE_KEY = '2d0f6b485aba4f29a7b9e1d4e6fd94fb';
 async function fetchTreasury(){
   const rateEl = document.getElementById('tsy-rate');
   const chgEl = document.getElementById('tsy-chg');
   try{
-    const r = await fetch('https://rate.sx/usd/tyx', {headers:{'Accept':'application/json'}});
-    const text = await r.text();
-    const cur = parseFloat(text.trim());
-    if(isNaN(cur)) throw new Error('bad value');
+    const r = await fetch(`https://api.twelvedata.com/quote?symbol=TNX&apikey=${TWELVE_KEY}`);
+    const j = await r.json();
+    if(!j.close) throw new Error('no data');
+    const cur = parseFloat(j.close);
+    const prev = parseFloat(j.previous_close || j.close);
+    const chg = cur - prev;
     rateEl.textContent = cur.toFixed(2) + '%';
-    chgEl.textContent = ''; chgEl.className = 'tsy-chg flat';
-  }catch(e){
-    rateEl.textContent = '—';
-    chgEl.textContent = '';
-  }
+    if(Math.abs(chg)<0.001){ chgEl.textContent=''; chgEl.className='tsy-chg flat'; }
+    else if(chg>0){ chgEl.textContent='▲ +'+chg.toFixed(2); chgEl.className='tsy-chg up'; }
+    else{ chgEl.textContent='▼ '+chg.toFixed(2); chgEl.className='tsy-chg dn'; }
+  }catch(e){ rateEl.textContent='—'; chgEl.textContent=''; }
 }
 
 // NEWS — NewsData.io explicitly supports CORS from browser requests
