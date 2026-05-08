@@ -542,7 +542,8 @@ async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&category=top&size=8`;
+    const q = encodeURIComponent('"S&P 500" OR "Federal Reserve" OR "US Treasury" OR "interest rates" OR "geopolitical" OR "oil prices" OR "NATO" OR "inflation" OR "bond market" OR "stock market" OR "trade war"');
+const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
@@ -562,8 +563,8 @@ async function fetchMFNews(){
   const container = document.getElementById('mf-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const q = encodeURIComponent('multifamily OR "build to rent" OR BTR OR "apartment market" OR "cap rate" OR "single family rental"');
-    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=8`;
+   const q = encodeURIComponent('Blackstone OR BREIT OR "joint venture" OR "institutional multifamily" OR "build-to-rent" OR "BTR" OR "Sun Belt multifamily" OR "Greystar" OR "AvalonBay" OR "equity residential" OR "apartment REIT" OR "multifamily fund"');
+const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
