@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -550,8 +551,7 @@ async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const q = encodeURIComponent('"S&P 500" OR "Federal Reserve" OR "interest rates" OR "US Treasury" OR "10-year yield" OR "inflation" OR "oil prices" OR "trade war" OR "tariffs" OR "GDP" OR "geopolitics"');
-    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=8`;
+    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&category=business,top&country=us&size=8`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
@@ -571,8 +571,7 @@ async function fetchMFNews(){
   const container = document.getElementById('mf-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const q = encodeURIComponent('BREIT OR "Blackstone Real Estate" OR "build-to-rent" OR "institutional multifamily" OR "multifamily fund" OR "apartment REIT" OR "Greystar" OR "Tricon" OR "multifamily acquisition" OR "Class A apartments"');
-    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=8`;
+    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&q=multifamily&size=8`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
