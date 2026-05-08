@@ -34,9 +34,9 @@ input, button, textarea, select { font-family: var(--font); }
 .shell-narrow { max-width: 860px; margin: 0 auto; padding: 2rem 2rem 5rem; }
 
 /* TOP BAR */
-.top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: stretch; min-height: 56px; }
-.top-bar-divider { width: 1px; background: var(--border); margin: 8px 0; flex-shrink: 0; }
-.tsy-block { display: flex; align-items: center; gap: 10px; padding-right: 20px; text-decoration: none; flex-shrink: 0; }
+.top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; min-height: 52px; gap: 0; }
+.top-bar-divider { width: 1px; background: var(--border); height: 30px; flex-shrink: 0; margin: 0 20px; }
+.tsy-block { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
 .tsy-block:hover .tsy-rate { color: var(--accent); }
 .tsy-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
 .tsy-rate { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--text); transition: color 0.15s; }
@@ -44,18 +44,27 @@ input, button, textarea, select { font-family: var(--font); }
 .tsy-chg.up { color: var(--red); }
 .tsy-chg.dn { color: var(--accent); }
 .tsy-chg.flat { color: var(--faint); }
-.news-block { flex: 1; display: flex; align-items: center; gap: 12px; padding-left: 20px; min-width: 0; overflow: hidden; }
-.news-pill { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: white; background: var(--accent); border-radius: 10px; padding: 3px 10px; white-space: nowrap; flex-shrink: 0; }
-.news-ticker { flex: 1; min-width: 0; overflow: hidden; height: 56px; }
-.news-inner { display: flex; flex-direction: column; transition: transform 0.5s ease; }
-.news-link { display: flex; align-items: center; height: 56px; text-decoration: none; gap: 10px; min-width: 0; }
-.news-link:hover .news-hl { color: var(--accent); }
-.news-hl { font-size: 13.5px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.15s; }
-.news-src { font-family: var(--mono); font-size: 10px; color: var(--faint); white-space: nowrap; flex-shrink: 0; }
-.news-nav { display: flex; gap: 5px; flex-shrink: 0; }
-.nav-btn { background: none; border: 1px solid var(--border2); border-radius: 4px; color: var(--muted); font-size: 13px; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, color 0.15s; }
-.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-.news-msg { font-size: 12px; color: var(--faint); font-style: italic; }
+.top-bar-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.top-bar-hint { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+
+/* NEWS PANELS */
+.news-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.news-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.news-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.news-panel-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; color: white; border-radius: 10px; padding: 3px 10px; }
+.news-panel-label.global { background: #5a6e8a; }
+.news-panel-label.mf { background: var(--accent); }
+.news-refresh { background: none; border: none; color: var(--faint); font-size: 13px; cursor: pointer; padding: 2px; transition: color 0.15s; line-height: 1; }
+.news-refresh:hover { color: var(--accent); }
+.news-list { display: flex; flex-direction: column; gap: 0; }
+.news-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); text-decoration: none; }
+.news-item:last-child { border-bottom: none; }
+.news-item:hover .news-item-hl { color: var(--accent); }
+.news-item-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); flex-shrink: 0; margin-top: 6px; }
+.news-item-body { flex: 1; min-width: 0; }
+.news-item-hl { font-size: 12.5px; font-weight: 500; color: var(--text); line-height: 1.4; display: block; transition: color 0.15s; margin-bottom: 2px; }
+.news-item-meta { font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+.news-loading-msg { font-size: 12px; color: var(--faint); font-style: italic; padding: 8px 0; }
 
 /* PAGE HEADER */
 .db-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
@@ -278,21 +287,32 @@ input, button, textarea, select { font-family: var(--font); }
       <span class="tsy-chg flat" id="tsy-chg"></span>
     </a>
     <div class="top-bar-divider"></div>
-    <div class="news-block">
-      <span class="news-pill">News</span>
-      <div class="news-ticker">
-        <div class="news-inner" id="news-inner">
-          <div class="news-link"><span class="news-msg">Loading headlines...</span></div>
-        </div>
-      </div>
-      <div class="news-nav">
-        <button class="nav-btn" onclick="newsNav(-1)">&#8593;</button>
-        <button class="nav-btn" onclick="newsNav(1)">&#8595;</button>
-      </div>
-    </div>
+    <span class="top-bar-hint">Click rate to view full chart</span>
   </div>
 
   <div class="shell">
+
+    <div class="news-panels">
+      <div class="news-panel">
+        <div class="news-panel-header">
+          <span class="news-panel-label global">Global News</span>
+          <button class="news-refresh" onclick="fetchGlobalNews()" title="Refresh">&#8635;</button>
+        </div>
+        <div class="news-list" id="global-news-list">
+          <div class="news-loading-msg">Loading headlines...</div>
+        </div>
+      </div>
+      <div class="news-panel">
+        <div class="news-panel-header">
+          <span class="news-panel-label mf">Multifamily News</span>
+          <button class="news-refresh" onclick="fetchMFNews()" title="Refresh">&#8635;</button>
+        </div>
+        <div class="news-list" id="mf-news-list">
+          <div class="news-loading-msg">Loading headlines...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="db-header">
       <div>
         <div class="date-line" id="date-line"></div>
@@ -436,7 +456,7 @@ const defaultState = () => ({
 
 let state = defaultState();
 let arcFilter = 'all';
-let newsItems = [], newsIdx = 0, newsTicker = null;
+let newsItems = [], newsIdx = 0;
 
 function load(){ try{ const s=localStorage.getItem(KEY); if(s){state=JSON.parse(s); if(!state.archive)state.archive=[];} }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); updateBadge(); }catch(e){} }
@@ -481,53 +501,79 @@ function updateProgress(){
   document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
 }
 
-// TREASURY
-const FRED_KEY = '715ba73f9f5556efc495efe377aa58f6';
+// TREASURY — rate.sx is fully open, explicit CORS support
 async function fetchTreasury(){
+  const rateEl = document.getElementById('tsy-rate');
+  const chgEl = document.getElementById('tsy-chg');
   try{
-    const url=`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${FRED_KEY}&file_type=json&sort_order=desc&limit=3`;
-    const r=await fetch(url); const j=await r.json();
-    const obs=j.observations.filter(o=>o.value!='.');
-    const cur=parseFloat(obs[0].value), prev=parseFloat(obs[1].value), chg=cur-prev;
-    document.getElementById('tsy-rate').textContent=cur.toFixed(2)+'%';
-    const ce=document.getElementById('tsy-chg');
-    if(Math.abs(chg)<0.001){ce.textContent='';ce.className='tsy-chg flat';}
-    else if(chg>0){ce.textContent='▲ +'+chg.toFixed(2);ce.className='tsy-chg up';}
-    else{ce.textContent='▼ '+chg.toFixed(2);ce.className='tsy-chg dn';}
-  }catch(e){ document.getElementById('tsy-rate').textContent='—'; }
-}
-
-// NEWS
-const GNEWS_KEY = 'e1cf84b583c86def6b8c78f900e64962';
-async function fetchNews(){
-  const inner=document.getElementById('news-inner');
-  try{
-    const q=encodeURIComponent('multifamily OR "build to rent" OR BTR OR "single family rental" OR "cap rate" OR "apartment market"');
-    const url=`https://gnews.io/api/v4/search?q=${q}&lang=en&country=us&max=10&apikey=${GNEWS_KEY}`;
-    const r=await fetch(url); const j=await r.json();
-    if(!j.articles||!j.articles.length) throw new Error('empty');
-    newsItems=j.articles.filter(a=>a.title&&a.url).slice(0,10);
-    inner.innerHTML='';
-    newsItems.forEach(a=>{
-      const link=mk('a','news-link'); link.href=a.url; link.target='_blank'; link.rel='noopener';
-      const hl=mk('span','news-hl'); hl.textContent=a.title;
-      const src=mk('span','news-src'); src.textContent=a.source.name;
-      link.appendChild(hl); link.appendChild(src); inner.appendChild(link);
-    });
-    newsIdx=0; inner.style.transition='none'; inner.style.transform='translateY(0)';
-    if(newsTicker) clearInterval(newsTicker);
-    newsTicker=setInterval(()=>newsNav(1),8000);
+    const r = await fetch('https://rate.sx/usd/tyx', {headers:{'Accept':'application/json'}});
+    const text = await r.text();
+    const cur = parseFloat(text.trim());
+    if(isNaN(cur)) throw new Error('bad value');
+    rateEl.textContent = cur.toFixed(2) + '%';
+    chgEl.textContent = ''; chgEl.className = 'tsy-chg flat';
   }catch(e){
-    inner.innerHTML=`<div class="news-link"><span class="news-msg">Could not load headlines — check internet connection</span></div>`;
+    rateEl.textContent = '—';
+    chgEl.textContent = '';
   }
 }
-function newsNav(dir){
-  if(!newsItems.length) return;
-  newsIdx=(newsIdx+dir+newsItems.length)%newsItems.length;
-  const inner=document.getElementById('news-inner');
-  inner.style.transition='transform 0.5s ease';
-  inner.style.transform=`translateY(-${newsIdx*56}px)`;
+
+// NEWS — rss2json.com has open CORS, no key needed
+async function fetchRSS(url, sourceName){
+  const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=6`);
+  const j = await r.json();
+  if(!j.items || !j.items.length) throw new Error('empty');
+  return j.items.map(a => ({title: a.title, url: a.link, source: sourceName, date: a.pubDate ? a.pubDate.slice(0,10) : ''}));
 }
+
+function renderNewsList(containerId, items){
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if(!items.length){ container.innerHTML = '<div class="news-loading-msg">No headlines available</div>'; return; }
+  items.forEach(a => {
+    const link = mk('a','news-item'); link.href = a.url; link.target = '_blank'; link.rel = 'noopener';
+    const dot = mk('div','news-item-dot');
+    const body = mk('div','news-item-body');
+    const hl = mk('span','news-item-hl'); hl.textContent = a.title;
+    const meta = mk('span','news-item-meta'); meta.textContent = a.source + (a.date ? ' · ' + a.date : '');
+    body.appendChild(hl); body.appendChild(meta);
+    link.appendChild(dot); link.appendChild(body);
+    container.appendChild(link);
+  });
+}
+
+async function fetchGlobalNews(){
+  const container = document.getElementById('global-news-list');
+  container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
+  const feeds = [
+    {url:'https://feeds.bbci.co.uk/news/world/rss.xml', name:'BBC News'},
+    {url:'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name:'NY Times'},
+    {url:'https://feeds.reuters.com/reuters/topNews', name:'Reuters'},
+  ];
+  const all = [];
+  for(const f of feeds){
+    try{ const items = await fetchRSS(f.url, f.name); all.push(...items.slice(0,3)); }catch(e){}
+  }
+  if(!all.length){ container.innerHTML = '<div class="news-loading-msg">Could not load — check connection</div>'; return; }
+  renderNewsList('global-news-list', all.slice(0,8));
+}
+
+async function fetchMFNews(){
+  const container = document.getElementById('mf-news-list');
+  container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
+  const feeds = [
+    {url:'https://www.globest.com/feed/', name:'GlobeSt'},
+    {url:'https://therealdeal.com/feed/', name:'The Real Deal'},
+    {url:'https://www.multifamilyexecutive.com/rss/news', name:'MFE'},
+  ];
+  const all = [];
+  for(const f of feeds){
+    try{ const items = await fetchRSS(f.url, f.name); all.push(...items.slice(0,3)); }catch(e){}
+  }
+  if(!all.length){ container.innerHTML = '<div class="news-loading-msg">Could not load — check connection</div>'; return; }
+  renderNewsList('mf-news-list', all.slice(0,8));
+}
+
 
 // TOP 3
 function renderTop3(){
@@ -805,7 +851,7 @@ function confirmReset(){ if(confirm('Reset everything including archive?')){ sta
 
 // INIT — all event listeners wired here after DOM is ready
 function init(){
-  setDate(); fetchTreasury(); fetchNews();
+  setDate(); fetchTreasury(); fetchGlobalNews(); fetchMFNews();
   renderTop3(); renderDeals(); renderWeek(); renderIntel(); renderInbox(); renderCadence(); initNotes(); updateBadge();
 
   document.getElementById('deal-add-btn').addEventListener('click', addDeal);
