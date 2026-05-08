@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -505,8 +504,9 @@ async function fetchTreasury(){
   const chgEl  = document.getElementById('tsy-chg');
   try{
     const target = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=5d';
-    const r = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(target));
-    const j = await r.json();
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target));
+    const wrapper = await r.json();
+    const j = JSON.parse(wrapper.contents);
     const meta = j.chart.result[0].meta;
     const cur  = meta.regularMarketPrice;
     const prev = meta.chartPreviousClose;
@@ -551,7 +551,7 @@ async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&category=business,top&country=us&size=8`;
+    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&category=business&q=inflation%20OR%20treasury%20OR%20%22interest%20rates%22%20OR%20%22S%26P%22%20OR%20tariffs%20OR%20%22Federal%20Reserve%22&country=us&size=8`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
@@ -571,7 +571,7 @@ async function fetchMFNews(){
   const container = document.getElementById('mf-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try{
-    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&q=multifamily&size=8`;
+    const url = `https://newsdata.io/api/1/latest?apikey=${NEWSDATA_KEY}&language=en&q=multifamily%20OR%20%22build-to-rent%22%20OR%20Blackstone%20OR%20Greystar%20OR%20%22apartment%20REIT%22&size=8`;
     const r = await fetch(url);
     const j = await r.json();
     if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
