@@ -496,8 +496,6 @@ function updateProgress(){
   document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
 }
 
-const PROXY = 'https://corsproxy.io/?url=';
-
 // ── 10YR TREASURY — Yahoo Finance (^TNX) via corsproxy ───────────────────────
 async function fetchTreasury(){
   const rateEl = document.getElementById('tsy-rate');
@@ -551,9 +549,7 @@ async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
   try {
-    const q = encodeURIComponent(
-      '"S&P 500" OR "Federal Reserve" OR "interest rates" OR "US Treasury" OR "10-year yield" OR "inflation" OR "geopolitical" OR "oil prices" OR "trade war" OR "tariffs" OR "recession" OR "GDP"'
-    );
+    const q = encodeURIComponent('"S&P 500" OR "Federal Reserve" OR "interest rates" OR "US Treasury" OR "10-year yield" OR "inflation" OR "geopolitical" OR "oil prices" OR "trade war" OR "tariffs" OR "recession" OR "GDP"');
     const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=5`;
     const r   = await fetch(url);
     const j   = await r.json();
