@@ -518,13 +518,8 @@ async function fetchTreasury(){
   }
 }
 
-// NEWS — rss2json.com has open CORS, no key needed
-async function fetchRSS(url, sourceName){
-  const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=6`);
-  const j = await r.json();
-  if(!j.items || !j.items.length) throw new Error('empty');
-  return j.items.map(a => ({title: a.title, url: a.link, source: sourceName, date: a.pubDate ? a.pubDate.slice(0,10) : ''}));
-}
+// NEWS — NewsData.io explicitly supports CORS from browser requests
+const NEWSDATA_KEY = 'pub_c6f650b7fade4c7bb6299518dd834700';
 
 function renderNewsList(containerId, items){
   const container = document.getElementById(containerId);
@@ -545,33 +540,42 @@ function renderNewsList(containerId, items){
 async function fetchGlobalNews(){
   const container = document.getElementById('global-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
-  const feeds = [
-    {url:'https://feeds.bbci.co.uk/news/world/rss.xml', name:'BBC News'},
-    {url:'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name:'NY Times'},
-    {url:'https://feeds.reuters.com/reuters/topNews', name:'Reuters'},
-  ];
-  const all = [];
-  for(const f of feeds){
-    try{ const items = await fetchRSS(f.url, f.name); all.push(...items.slice(0,3)); }catch(e){}
+  try{
+    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&category=top&size=8`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
+    const items = j.results.map(a => ({
+      title: a.title,
+      url: a.link,
+      source: a.source_id || a.source_name || '',
+      date: a.pubDate ? a.pubDate.slice(0,10) : ''
+    }));
+    renderNewsList('global-news-list', items);
+  }catch(e){
+    container.innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
   }
-  if(!all.length){ container.innerHTML = '<div class="news-loading-msg">Could not load — check connection</div>'; return; }
-  renderNewsList('global-news-list', all.slice(0,8));
 }
 
 async function fetchMFNews(){
   const container = document.getElementById('mf-news-list');
   container.innerHTML = '<div class="news-loading-msg">Loading...</div>';
-  const feeds = [
-    {url:'https://www.globest.com/feed/', name:'GlobeSt'},
-    {url:'https://therealdeal.com/feed/', name:'The Real Deal'},
-    {url:'https://www.multifamilyexecutive.com/rss/news', name:'MFE'},
-  ];
-  const all = [];
-  for(const f of feeds){
-    try{ const items = await fetchRSS(f.url, f.name); all.push(...items.slice(0,3)); }catch(e){}
+  try{
+    const q = encodeURIComponent('multifamily OR "build to rent" OR BTR OR "apartment market" OR "cap rate" OR "single family rental"');
+    const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=8`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if(j.status !== 'success' || !j.results.length) throw new Error(j.message||'no results');
+    const items = j.results.map(a => ({
+      title: a.title,
+      url: a.link,
+      source: a.source_id || a.source_name || '',
+      date: a.pubDate ? a.pubDate.slice(0,10) : ''
+    }));
+    renderNewsList('mf-news-list', items);
+  }catch(e){
+    container.innerHTML = `<div class="news-loading-msg">Could not load — ${e.message}</div>`;
   }
-  if(!all.length){ container.innerHTML = '<div class="news-loading-msg">Could not load — check connection</div>'; return; }
-  renderNewsList('mf-news-list', all.slice(0,8));
 }
 
 
