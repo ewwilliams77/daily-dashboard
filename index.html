@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daily Dashboard</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.stlouisfed.org https://newsdata.io https://fonts.googleapis.com;">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -503,16 +504,15 @@ async function fetchTreasury(){
   const rateEl = document.getElementById('tsy-rate');
   const chgEl  = document.getElementById('tsy-chg');
   try{
-    const target = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=5d';
-    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target));
-    const wrapper = await r.json();
-    const j = JSON.parse(wrapper.contents);
-    const meta = j.chart.result[0].meta;
-    const cur  = meta.regularMarketPrice;
-    const prev = meta.chartPreviousClose;
-    if(!cur) throw new Error('no data');
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=715ba73f9f5556efc495efe377aa58f6&file_type=json&sort_order=desc&limit=10`;
+    const r = await fetch(url);
+    const j = await r.json();
+    const valid = j.observations.filter(o => o.value !== '.' && !isNaN(parseFloat(o.value)));
+    if(!valid.length) throw new Error('no data');
+    const cur  = parseFloat(valid[0].value);
+    const prev = valid.length > 1 ? parseFloat(valid[1].value) : null;
     rateEl.textContent = cur.toFixed(2) + '%';
-    if(prev){
+    if(prev !== null){
       const diff = cur - prev;
       if(Math.abs(diff) < 0.001){
         chgEl.textContent = 'unch'; chgEl.className = 'tsy-chg flat';
