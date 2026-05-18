@@ -349,3 +349,339 @@ const defaultState=()=>({
   top3:[
     {header:'Relationship maintenance',subheader:'No deal attached — pure access building',showSub:true,tasks:[{text:'Call one dormant owner contact',done:false},{text:'Check in with active equity/LP partner',done:false}],allDone:false},
     {header:"Today's priority 2",subheader:'',showSub:false,tasks:[],allDone:false},
+    {header:"Today's priority 3",subheader:'',showSub:false,tasks:[],allDone:false}
+  ],
+  deals:[],
+  weeks:{
+    deals:{label:'Deals / Pipeline',tasks:[{text:'Update comp set for active listing',done:false},{text:'BOV in progress — stage check',done:false},{text:'Review LOI redlines',done:false}]},
+    outreach:{label:'Outreach',tasks:[{text:'Contact 5 BTR developers re: off-market',done:false},{text:'New owner/developer research — recent Carolinas closings',done:false}]},
+    admin:{label:'Admin / Ops',tasks:[{text:'Update pipeline tracker',done:false},{text:'Update competitor listings / track DOM',done:false}]}
+  },
+  intel:[{text:'CoStar/Crexi sweep — new listings, price reductions, relisted deals',done:false},{text:'Check permitting activity — BTR pipeline across Carolinas',done:false},{text:'Note any recent trades for comp database',done:false}],
+  cadence:[
+    {name:'Pipeline tracker update',detail:'',freq:'Weekly'},
+    {name:'Market comp review',detail:'Active BTR/SFR listings, recent trades, DOM, asking vs. closed cap rates across the Carolinas',freq:'Bi-weekly'},
+    {name:'Quarterly seller outreach refresh',detail:'BTR/SFR ownership list — who may transact given rate environment',freq:'Quarterly'},
+    {name:'Broker production report',detail:'',freq:'Monthly'},
+    {name:'Monday meeting — Louis (BTR partner)',detail:'',freq:'Weekly'},
+    {name:'Equity/LP check-ins',detail:'',freq:'Bi-weekly'},
+    {name:'CoStar/Crexi full sweep',detail:'Price reductions, relisted deals, new comp activity',freq:'Weekly'}
+  ],
+  inbox:[],notes:'',archive:[]
+});
+let state=defaultState(),arcFilter='all';
+function load(){try{const s=localStorage.getItem(KEY);if(s){state=JSON.parse(s);if(!state.archive)state.archive=[];}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));updateBadge();}catch(e){}}
+function archiveItem(text,section,sub){state.archive.unshift({text,section,subsection:sub||'',date:dateStamp(),id:Date.now()});}
+function updateBadge(){const b=document.getElementById('arc-badge');if(b)b.textContent=(state.archive||[]).length;}
+function mk(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function inpEl(cls,val,ph){const i=document.createElement('input');i.type='text';i.className=cls;i.value=val||'';i.placeholder=ph||'';return i;}
+function inlineEdit(el2,current,onSave,isDiv=false){
+  if(!el2.parentNode||el2.parentNode.querySelector('.inline-edit'))return;
+  const i=document.createElement('input');i.type='text';i.className='inline-edit';i.value=current;
+  if(isDiv){i.style.flex='1';i.style.minWidth='0';}
+  el2.replaceWith(i);i.focus();i.select();
+  const commit=()=>{const v=i.value.trim();if(v)onSave(v);};
+  i.addEventListener('blur',commit);
+  i.addEventListener('keydown',e=>{if(e.key==='Enter')i.blur();if(e.key==='Escape')onSave(current);});
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='dashboard-backup-'+dateStamp().replace(' ','-')+'.json';a.click();URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const imported=JSON.parse(e.target.result);
+      if(!imported.top3||!imported.weeks)throw new Error('invalid');
+      if(confirm('Replace all current data with this backup?')){state=imported;if(!state.archive)state.archive=[];save();init();alert('Imported successfully.');}
+    }catch(err){alert('Could not import — file may be invalid.');}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+function showDash(){document.getElementById('view-dash').classList.add('active');document.getElementById('view-arc').classList.remove('active');window.scrollTo(0,0);}
+function showArchive(){
+  document.getElementById('view-arc').classList.add('active');document.getElementById('view-dash').classList.remove('active');
+  document.getElementById('arc-search').value='';arcFilter='all';
+  document.querySelectorAll('.filter-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  renderArchive();window.scrollTo(0,0);
+}
+function setDate(){
+  const now=new Date();
+  document.getElementById('date-line').textContent=`${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  const h=now.getHours();
+  const g=h>=17?'wrap it up strong.':GREETINGS[Math.floor(Math.random()*GREETINGS.length)];
+  const t=h>=17?'Good evening':h>=12?'Good afternoon':'Good morning';
+  document.getElementById('greeting').innerHTML=`${t} — <strong>${g}</strong>`;
+}
+function updateProgress(){
+  const done=state.top3.filter(p=>p.allDone).length;
+  document.getElementById('prog-num').textContent=`${done}/3`;
+  document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
+}
+function renderNewsList(containerId,items){
+  const container=document.getElementById(containerId);container.innerHTML='';
+  if(!items.length){container.innerHTML='<div class="news-loading-msg">No headlines available</div>';return;}
+  items.forEach(a=>{
+    const link=mk('a','news-item');link.href=a.url;link.target='_blank';link.rel='noopener';
+    const dot=mk('div','news-item-dot');
+    const body=mk('div','news-item-body');
+    const hl=mk('span','news-item-hl');hl.textContent=a.title;
+    const meta=mk('span','news-item-meta');meta.textContent=a.source+(a.date?' · '+a.date:'');
+    body.appendChild(hl);body.appendChild(meta);link.appendChild(dot);link.appendChild(body);container.appendChild(link);
+  });
+}
+async function fetchGlobalNews(){
+  const container=document.getElementById('global-news-list');
+  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
+  try{
+    const r=await fetch('/api/news?feed='+encodeURIComponent('https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'));
+    const j=await r.json();
+    if(j.items&&j.items.length){
+      renderNewsList('global-news-list',j.items.slice(0,4).map(a=>({title:a.title,url:a.link,source:'CNBC',date:''})));
+    } else {
+      throw new Error('no items');
+    }
+  }catch(e){
+    container.innerHTML='<div class="news-loading-msg">Could not load</div>';
+  }
+}
+async function fetchMFNews(){
+  const container=document.getElementById('mf-news-list');
+  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
+  try{
+    const r=await fetch('/api/news?feed='+encodeURIComponent('https://www.globest.com/feed/'));
+    const j=await r.json();
+    if(j.items&&j.items.length){
+      renderNewsList('mf-news-list',j.items.slice(0,4).map(a=>({title:a.title,url:a.link,source:'GlobeSt',date:''})));
+    } else {
+      throw new Error('no items');
+    }
+  }catch(e){
+    container.innerHTML='<div class="news-loading-msg">Could not load</div>';
+  }
+}
+function renderTop3(){
+  const grid=document.getElementById('top3-grid');grid.innerHTML='';
+  state.top3.forEach((p,pi)=>{
+    const card=mk('div','card'+(p.allDone?' p-done-fade':''));
+    const lbl=mk('div','p-num');lbl.textContent=`Priority ${pi+1}`;card.appendChild(lbl);
+    const hdrIn=inpEl('p-hdr',p.header,'Property or focus area...');
+    hdrIn.addEventListener('input',()=>{state.top3[pi].header=hdrIn.value;save();});card.appendChild(hdrIn);
+    const tog=mk('button','p-sub-tog');tog.textContent=p.showSub?'− hide subheader':'+ add subheader';
+    tog.addEventListener('click',()=>{state.top3[pi].showSub=!p.showSub;save();renderTop3();});card.appendChild(tog);
+    if(p.showSub){const si=inpEl('p-sub',p.subheader,'Context — size, location, stage...');si.addEventListener('input',()=>{state.top3[pi].subheader=si.value;save();});card.appendChild(si);}
+    const cl=mk('div','p-checklist');
+    p.tasks.forEach((t,ti)=>{
+      const row=mk('div','p-row'+(t.done?' is-done':''));
+      const cb=mk('div','p-cb'+(t.done?' chk':''));cb.innerHTML=SVG_CHK();
+      cb.addEventListener('click',()=>{state.top3[pi].tasks[ti].done=!t.done;save();renderTop3();});
+      const txt=mk('span','p-txt'+(t.done?' done':''));txt.textContent=t.text;
+      if(!t.done)txt.addEventListener('click',()=>inlineEdit(txt,t.text,v=>{state.top3[pi].tasks[ti].text=v;save();renderTop3();}));
+      row.appendChild(cb);row.appendChild(txt);
+      if(t.done){
+        const acts=mk('div','row-acts');
+        const ab=mk('button','arc-btn');ab.textContent='Archive';
+        ab.addEventListener('click',()=>{archiveItem(t.text,'Priorities',`Priority ${pi+1}: ${p.header}`);state.top3[pi].tasks.splice(ti,1);save();renderTop3();});
+        const db=mk('button','del-btn');db.textContent='×';db.addEventListener('click',()=>{state.top3[pi].tasks.splice(ti,1);save();renderTop3();});
+        acts.appendChild(ab);acts.appendChild(db);row.appendChild(acts);
+      }else{
+        const db=mk('button','del-only');db.textContent='×';db.addEventListener('click',()=>{state.top3[pi].tasks.splice(ti,1);save();renderTop3();});row.appendChild(db);
+      }
+      cl.appendChild(row);
+    });
+    card.appendChild(cl);
+    const addDiv=mk('div','p-add');
+    const addIn=document.createElement('input');addIn.type='text';addIn.placeholder='Add contact or task...';
+    const doAdd=()=>{const v=addIn.value.trim();if(!v)return;state.top3[pi].tasks.push({text:v,done:false});addIn.value='';save();renderTop3();};
+    addIn.addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+    const addBtn=mk('button');addBtn.textContent='+ Add';addBtn.addEventListener('click',doAdd);
+    addDiv.appendChild(addIn);addDiv.appendChild(addBtn);card.appendChild(addDiv);
+    const db=mk('button','done-btn');db.textContent=p.allDone?'Undo':'Mark priority done';
+    db.addEventListener('click',()=>{state.top3[pi].allDone=!p.allDone;save();renderTop3();});
+    card.appendChild(db);grid.appendChild(card);
+  });
+  updateProgress();
+}
+function renderDeals(){
+  const list=document.getElementById('deal-list');list.innerHTML='';
+  state.deals.forEach((d,i)=>{
+    const row=document.createElement('div');row.className='deal-row'+(d.done?' is-done':'');
+    const cb=mk('div','deal-cb'+(d.done?' chk':''));cb.innerHTML=SVG_CHK();
+    cb.addEventListener('click',()=>{state.deals[i].done=!d.done;save();renderDeals();});row.appendChild(cb);
+    const name=mk('div','deal-name');name.textContent=d.name;
+    if(!d.done)name.addEventListener('click',()=>inlineEdit(name,d.name,v=>{state.deals[i].name=v;save();renderDeals();},true));
+    row.appendChild(name);
+    const sw=mk('div','deal-stage-wrap');
+    const stage=mk('span','deal-stage '+stageClass(d.stage));stage.textContent=d.stage||'—';
+    if(!d.done)stage.addEventListener('click',()=>inlineEdit(stage,d.stage,v=>{state.deals[i].stage=v;save();renderDeals();}));
+    sw.appendChild(stage);row.appendChild(sw);
+    const next=mk('div','deal-next');next.textContent=d.next||'—';
+    if(!d.done)next.addEventListener('click',()=>inlineEdit(next,d.next,v=>{state.deals[i].next=v;save();renderDeals();},true));
+    row.appendChild(next);
+    if(d.done){
+      const acts=mk('div','row-acts');
+      const ab=mk('button','arc-btn');ab.textContent='Archive';
+      ab.addEventListener('click',()=>{archiveItem(`${d.name} — ${d.stage}`,'Active Assignments','');state.deals.splice(i,1);save();renderDeals();});
+      const db=mk('button','del-btn');db.textContent='×';db.addEventListener('click',()=>{state.deals.splice(i,1);save();renderDeals();});
+      acts.appendChild(ab);acts.appendChild(db);row.appendChild(acts);
+    }else{
+      const db=mk('button','deal-del');db.textContent='×';db.addEventListener('click',()=>{state.deals.splice(i,1);save();renderDeals();});row.appendChild(db);
+    }
+    list.appendChild(row);
+  });
+}
+function addDeal(){
+  const name=document.getElementById('deal-name').value.trim();
+  const stage=document.getElementById('deal-stage-in').value.trim();
+  const next=document.getElementById('deal-next-in').value.trim();
+  if(!name)return;
+  state.deals.push({name,stage:stage||'Marketing',next:next||'',done:false});
+  ['deal-name','deal-stage-in','deal-next-in'].forEach(id=>document.getElementById(id).value='');
+  save();renderDeals();
+}
+function renderWeek(){
+  const grid=document.getElementById('week-grid');grid.innerHTML='';
+  Object.entries(state.weeks).forEach(([key,col])=>{
+    const card=mk('div','card');
+    const lbl=mk('div','slabel');lbl.textContent=col.label;card.appendChild(lbl);
+    const list=mk('div','task-list');
+    col.tasks.forEach((t,i)=>{
+      const row=mk('div','task-row'+(t.done?' is-done':''));
+      const cb=mk('div','task-cb'+(t.done?' chk':''));cb.innerHTML=SVG_CHK();
+      cb.addEventListener('click',()=>{state.weeks[key].tasks[i].done=!t.done;save();renderWeek();});
+      const txt=mk('span','task-txt'+(t.done?' done':''));txt.textContent=t.text;
+      if(!t.done)txt.addEventListener('click',()=>inlineEdit(txt,t.text,v=>{state.weeks[key].tasks[i].text=v;save();renderWeek();}));
+      row.appendChild(cb);row.appendChild(txt);
+      if(t.done){
+        const acts=mk('div','row-acts');
+        const ab=mk('button','arc-btn');ab.textContent='Archive';
+        ab.addEventListener('click',()=>{archiveItem(t.text,'This Week',col.label);state.weeks[key].tasks.splice(i,1);save();renderWeek();});
+        const db=mk('button','del-btn');db.textContent='×';db.addEventListener('click',()=>{state.weeks[key].tasks.splice(i,1);save();renderWeek();});
+        acts.appendChild(ab);acts.appendChild(db);row.appendChild(acts);
+      }else{
+        const db=mk('button','del-only');db.textContent='×';db.addEventListener('click',()=>{state.weeks[key].tasks.splice(i,1);save();renderWeek();});row.appendChild(db);
+      }
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    const ar=mk('div','add-row');
+    const inp=document.createElement('input');inp.type='text';inp.placeholder='Add task...';inp.id='in-'+key;
+    const doAdd=()=>{const v=inp.value.trim();if(!v)return;state.weeks[key].tasks.push({text:v,done:false});inp.value='';save();renderWeek();setTimeout(()=>{const e=document.getElementById('in-'+key);if(e)e.focus();},40);};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();});
+    const btn=mk('button');btn.textContent='+ Add';btn.addEventListener('click',doAdd);
+    ar.appendChild(inp);ar.appendChild(btn);card.appendChild(ar);grid.appendChild(card);
+  });
+}
+function renderIntel(){
+  const list=document.getElementById('intel-list');list.innerHTML='';
+  state.intel.forEach((t,i)=>{
+    const row=mk('div','task-row'+(t.done?' is-done':''));
+    const cb=mk('div','task-cb'+(t.done?' chk':''));cb.innerHTML=SVG_CHK();
+    cb.addEventListener('click',()=>{state.intel[i].done=!t.done;save();renderIntel();});
+    const txt=mk('span','task-txt'+(t.done?' done':''));txt.textContent=t.text;
+    if(!t.done)txt.addEventListener('click',()=>inlineEdit(txt,t.text,v=>{state.intel[i].text=v;save();renderIntel();}));
+    row.appendChild(cb);row.appendChild(txt);
+    if(t.done){
+      const acts=mk('div','row-acts');
+      const ab=mk('button','arc-btn');ab.textContent='Archive';
+      ab.addEventListener('click',()=>{archiveItem(t.text,'Intelligence','');state.intel.splice(i,1);save();renderIntel();});
+      const db=mk('button','del-btn');db.textContent='×';db.addEventListener('click',()=>{state.intel.splice(i,1);save();renderIntel();});
+      acts.appendChild(ab);acts.appendChild(db);row.appendChild(acts);
+    }else{
+      const db=mk('button','del-only');db.textContent='×';db.addEventListener('click',()=>{state.intel.splice(i,1);save();renderIntel();});row.appendChild(db);
+    }
+    list.appendChild(row);
+  });
+}
+function addIntel(){const i=document.getElementById('in-intel');const v=i.value.trim();if(!v)return;state.intel.push({text:v,done:false});i.value='';save();renderIntel();}
+function addInbox(){const i=document.getElementById('inbox-in');const v=i.value.trim();if(!v)return;state.inbox.push(v);i.value='';save();renderInbox();}
+function removeInbox(i){state.inbox.splice(i,1);save();renderInbox();}
+function renderInbox(){
+  const c=document.getElementById('inbox-chips');c.innerHTML='';
+  state.inbox.forEach((item,i)=>{const chip=mk('div','chip');chip.innerHTML=`<span>${item}</span><button onclick="removeInbox(${i})">×</button>`;c.appendChild(chip);});
+}
+function renderCadence(){
+  const list=document.getElementById('cad-list');list.innerHTML='';
+  state.cadence.forEach((item,i)=>{
+    const row=mk('div','cad-row');const main=mk('div','cad-main');
+    const name=mk('span','cad-name');name.textContent=item.name;name.addEventListener('click',()=>cadEdit(i,'name',name));main.appendChild(name);
+    const det=mk('span',item.detail?'cad-det':'cad-det empty');det.textContent=item.detail||'+ add detail';det.addEventListener('click',()=>cadEdit(i,'detail',det));main.appendChild(det);
+    const freq=mk('span','cad-freq');freq.textContent=item.freq;freq.addEventListener('click',()=>cadEditFreq(i,freq));
+    const d=mk('button','cad-del');d.textContent='×';d.addEventListener('click',()=>{state.cadence.splice(i,1);save();renderCadence();});
+    row.appendChild(main);row.appendChild(freq);row.appendChild(d);list.appendChild(row);
+  });
+}
+function cadEdit(i,field,el2){
+  const i2=document.createElement('input');i2.className='cad-edit';i2.type='text';
+  i2.value=state.cadence[i][field]||'';i2.placeholder=field==='detail'?'Add detail...':'';
+  el2.replaceWith(i2);i2.focus();i2.select();
+  const commit=()=>{state.cadence[i][field]=i2.value.trim();save();renderCadence();};
+  i2.addEventListener('blur',commit);i2.addEventListener('keydown',e=>{if(e.key==='Enter')i2.blur();if(e.key==='Escape')renderCadence();});
+}
+function cadEditFreq(i,el2){
+  const i2=document.createElement('input');i2.className='cad-freq-edit';i2.type='text';
+  i2.value=state.cadence[i].freq;el2.replaceWith(i2);i2.focus();i2.select();
+  const commit=()=>{if(i2.value.trim())state.cadence[i].freq=i2.value.trim();save();renderCadence();};
+  i2.addEventListener('blur',commit);i2.addEventListener('keydown',e=>{if(e.key==='Enter')i2.blur();if(e.key==='Escape')renderCadence();});
+}
+function addCadence(){
+  const name=document.getElementById('cad-name').value.trim();const freq=document.getElementById('cad-freq').value.trim();if(!name)return;
+  state.cadence.push({name,detail:'',freq:freq||'As needed'});
+  document.getElementById('cad-name').value='';document.getElementById('cad-freq').value='';save();renderCadence();
+}
+function initNotes(){
+  const ta=document.getElementById('notes-area');ta.value=state.notes||'';ta.addEventListener('input',()=>{state.notes=ta.value;save();});
+}
+function setFilter(f,btn){arcFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderArchive();}
+function tagClass(s){if(s==='Priorities')return 't-pri';if(s==='Active Assignments')return 't-deal';if(s==='This Week')return 't-week';if(s==='Intelligence')return 't-intel';return 't-other';}
+function renderArchive(){
+  const archive=state.archive||[];
+  const query=(document.getElementById('arc-search').value||'').toLowerCase();
+  let items=archive;
+  if(arcFilter!=='all')items=items.filter(a=>a.section===arcFilter);
+  if(query)items=items.filter(a=>a.text.toLowerCase().includes(query)||(a.subsection||'').toLowerCase().includes(query));
+  document.getElementById('arc-count-sub').textContent=`${archive.length} item${archive.length!==1?'s':''}`;
+  const content=document.getElementById('arc-content');content.innerHTML='';
+  if(!items.length){content.innerHTML=`<div class="empty-state"><div class="empty-icon">&#128194;</div><div class="empty-txt">${archive.length?'No items match your filter':'Nothing archived yet'}</div></div>`;return;}
+  const groups={};items.forEach(a=>{if(!groups[a.section])groups[a.section]=[];groups[a.section].push(a);});
+  Object.entries(groups).forEach(([section,groupItems])=>{
+    const grp=mk('div','sec-group');
+    const title=mk('div','sec-title');title.innerHTML=`${section} <span class="sec-count">${groupItems.length}</span>`;grp.appendChild(title);
+    groupItems.forEach(a=>{
+      const idx=state.archive.findIndex(x=>x.id===a.id);
+      const row=mk('div','arc-item');const main=mk('div','arc-item-main');
+      const txt=mk('div','arc-item-txt');txt.textContent=a.text;
+      const meta=mk('div','arc-item-meta');
+      const tag=mk('span','arc-tag '+tagClass(a.section));tag.textContent=a.section;meta.appendChild(tag);
+      if(a.subsection){const sub=mk('span','arc-meta-sub');sub.textContent=a.subsection;meta.appendChild(sub);}
+      const date=mk('span','arc-meta-date');date.textContent=a.date||'';meta.appendChild(date);
+      main.appendChild(txt);main.appendChild(meta);row.appendChild(main);
+      const db=mk('button','arc-item-del');db.textContent='×';db.title='Delete permanently';
+      db.addEventListener('click',()=>{state.archive.splice(idx,1);save();renderArchive();});
+      row.appendChild(db);grp.appendChild(row);
+    });
+    content.appendChild(grp);
+  });
+}
+function clearArchive(){if(confirm('Permanently delete all archived items?')){state.archive=[];save();renderArchive();}}
+function confirmReset(){if(confirm('Reset everything including archive?')){state=defaultState();save();init();}}
+function init(){
+  setDate();fetchGlobalNews();fetchMFNews();
+  renderTop3();renderDeals();renderWeek();renderIntel();renderInbox();renderCadence();initNotes();updateBadge();
+  document.getElementById('deal-add-btn').addEventListener('click',addDeal);
+  ['deal-name','deal-stage-in','deal-next-in'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addDeal();});});
+  document.getElementById('inbox-btn').addEventListener('click',addInbox);
+  document.getElementById('inbox-in').addEventListener('keydown',e=>{if(e.key==='Enter')addInbox();});
+  document.getElementById('intel-add-btn').addEventListener('click',addIntel);
+  document.getElementById('in-intel').addEventListener('keydown',e=>{if(e.key==='Enter')addIntel();});
+  document.getElementById('cad-add-btn').addEventListener('click',addCadence);
+  ['cad-name','cad-freq'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addCadence();});});
+}
+load();init();
+</script>
+</body>
+</html>
