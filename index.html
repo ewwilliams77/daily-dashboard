@@ -436,34 +436,67 @@ function renderNewsList(containerId,items){
 }
 async function fetchGlobalNews(){
   const container=document.getElementById('global-news-list');
-  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
-  try{
-    const r=await fetch('/api/news?feed='+encodeURIComponent('https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'));
-    const j=await r.json();
-    if(j.items&&j.items.length){
-      renderNewsList('global-news-list',j.items.slice(0,4).map(a=>({title:a.title,url:a.link,source:'CNBC',date:''})));
-    } else {
-      throw new Error('no items');
-    }
-  }catch(e){
-    container.innerHTML='<div class="news-loading-msg">Could not load</div>';
+  container.innerHTML='';
+  const feeds=[
+    {url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114',name:'CNBC'},
+    {url:'https://feeds.wsj.com/wsj/xml/rss/3_7085.xml',name:'WSJ'},
+    {url:'https://www.bloomberg.com/feeds/podcasts/etf_iq.xml',name:'Bloomberg'},
+    {url:'https://www.federalreserve.gov/feeds/press_all.xml',name:'Fed Reserve'},
+  ];
+  for(const f of feeds){
+    const row=document.createElement('div');row.className='news-item';row.style.opacity='0.5';
+    const dot=document.createElement('div');dot.className='news-item-dot';
+    const body=document.createElement('div');body.className='news-item-body';
+    const hl=document.createElement('span');hl.className='news-item-hl';hl.textContent='Loading...';
+    const meta=document.createElement('span');meta.className='news-item-meta';meta.textContent=f.name;
+    body.appendChild(hl);body.appendChild(meta);row.appendChild(dot);row.appendChild(body);
+    container.appendChild(row);
+    fetch('/api/news?feed='+encodeURIComponent(f.url))
+      .then(r=>r.json())
+      .then(j=>{
+        if(j.items&&j.items[0]){
+          const a=document.createElement('a');a.className='news-item';a.href=j.items[0].link;a.target='_blank';a.rel='noopener';
+          const d2=document.createElement('div');d2.className='news-item-dot';
+          const b2=document.createElement('div');b2.className='news-item-body';
+          const h2=document.createElement('span');h2.className='news-item-hl';h2.textContent=j.items[0].title;
+          const m2=document.createElement('span');m2.className='news-item-meta';m2.textContent=f.name;
+          b2.appendChild(h2);b2.appendChild(m2);a.appendChild(d2);a.appendChild(b2);row.replaceWith(a);
+        }else{hl.textContent='No headline';row.style.opacity='0.3';}
+      })
+      .catch(()=>{hl.textContent='Could not load';row.style.opacity='0.3';});
   }
 }
 async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
-  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
-  try{
-    const r=await fetch('/api/news?feed='+encodeURIComponent('https://www.globest.com/feed/'));
-    const j=await r.json();
-    if(j.items&&j.items.length){
-      renderNewsList('mf-news-list',j.items.slice(0,4).map(a=>({title:a.title,url:a.link,source:'GlobeSt',date:''})));
-    } else {
-      throw new Error('no items');
-    }
-  }catch(e){
-    container.innerHTML='<div class="news-loading-msg">Could not load</div>';
+  container.innerHTML='';
+  const feeds=[
+    {url:'https://www.costar.com/rss/news',name:'CoStar'},
+    {url:'https://www.bisnow.com/rss',name:'Bisnow'},
+    {url:'https://www.globest.com/feed/',name:'GlobeSt'},
+    {url:'https://therealdeal.com/feed/',name:'The Real Deal'},
+  ];
+  for(const f of feeds){
+    const row=document.createElement('div');row.className='news-item';row.style.opacity='0.5';
+    const dot=document.createElement('div');dot.className='news-item-dot';
+    const body=document.createElement('div');body.className='news-item-body';
+    const hl=document.createElement('span');hl.className='news-item-hl';hl.textContent='Loading...';
+    const meta=document.createElement('span');meta.className='news-item-meta';meta.textContent=f.name;
+    body.appendChild(hl);body.appendChild(meta);row.appendChild(dot);row.appendChild(body);
+    container.appendChild(row);
+    fetch('/api/news?feed='+encodeURIComponent(f.url))
+      .then(r=>r.json())
+      .then(j=>{
+        if(j.items&&j.items[0]){
+          const a=document.createElement('a');a.className='news-item';a.href=j.items[0].link;a.target='_blank';a.rel='noopener';
+          const d2=document.createElement('div');d2.className='news-item-dot';
+          const b2=document.createElement('div');b2.className='news-item-body';
+          const h2=document.createElement('span');h2.className='news-item-hl';h2.textContent=j.items[0].title;
+          const m2=document.createElement('span');m2.className='news-item-meta';m2.textContent=f.name;
+          b2.appendChild(h2);b2.appendChild(m2);a.appendChild(d2);a.appendChild(b2);row.replaceWith(a);
+        }else{hl.textContent='No headline';row.style.opacity='0.3';}
+      })
+      .catch(()=>{hl.textContent='Could not load';row.style.opacity='0.3';});
   }
-}
 function renderTop3(){
   const grid=document.getElementById('top3-grid');grid.innerHTML='';
   state.top3.forEach((p,pi)=>{
