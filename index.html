@@ -439,8 +439,8 @@ async function fetchGlobalNews(){
   container.innerHTML='';
   const feeds=[
     {url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114',name:'CNBC'},
-    {url:'https://feeds.wsj.com/wsj/xml/rss/3_7085.xml',name:'WSJ'},
-    {url:'https://www.bloomberg.com/feeds/podcasts/etf_iq.xml',name:'Bloomberg'},
+    {url:'https://feeds.npr.org/1008/rss.xml',name:'NPR Business'},
+    {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
     {url:'https://www.federalreserve.gov/feeds/press_all.xml',name:'Fed Reserve'},
   ];
   for(const f of feeds){
@@ -470,9 +470,9 @@ async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
   container.innerHTML='';
   const feeds=[
-    {url:'https://www.costar.com/rss/news',name:'CoStar'},
     {url:'https://www.bisnow.com/rss',name:'Bisnow'},
-    {url:'https://www.globest.com/feed/',name:'GlobeSt'},
+    {url:'https://www.housingwire.com/feed/',name:'HousingWire'},
+    {url:'https://www.multifamilyexecutive.com/rss/news',name:'Multifamily Executive'},
     {url:'https://therealdeal.com/feed/',name:'The Real Deal'},
   ];
   for(const f of feeds){
