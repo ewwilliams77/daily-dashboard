@@ -26,16 +26,20 @@ input,button,textarea,select{font-family:var(--font);}
 .top-bar-hint{font-family:var(--mono);font-size:10px;color:var(--faint);}
 .news-panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .news-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
-.news-panel-header{display:flex;align-items:center;margin-bottom:12px;}
+.news-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .news-panel-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;color:white;border-radius:10px;padding:3px 10px;}
 .news-panel-label.global{background:#5a6e8a;}.news-panel-label.mf{background:var(--accent);}
-.news-link-list{display:flex;flex-direction:column;}
-.news-link-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);text-decoration:none;}
-.news-link-item:last-child{border-bottom:none;}
-.news-link-item:hover .news-link-name{color:var(--accent);}
-.news-link-dot{width:5px;height:5px;border-radius:50%;background:var(--faint);flex-shrink:0;}
-.news-link-name{font-size:13px;font-weight:500;color:var(--text);transition:color 0.15s;flex:1;}
-.news-link-sub{font-family:var(--mono);font-size:9.5px;color:var(--faint);}
+.news-refresh{background:none;border:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px;transition:color 0.15s;}
+.news-refresh:hover{color:var(--accent);}
+.news-list{display:flex;flex-direction:column;}
+.news-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);text-decoration:none;}
+.news-item:last-child{border-bottom:none;}
+.news-item:hover .news-item-hl{color:var(--accent);}
+.news-item-dot{width:5px;height:5px;border-radius:50%;background:var(--faint);flex-shrink:0;margin-top:6px;}
+.news-item-body{flex:1;min-width:0;}
+.news-item-hl{font-size:12.5px;font-weight:500;color:var(--text);line-height:1.4;display:block;transition:color 0.15s;margin-bottom:2px;}
+.news-item-meta{font-family:var(--mono);font-size:9.5px;color:var(--faint);}
+.news-loading-msg{font-size:12px;color:var(--faint);font-style:italic;padding:8px 0;}
 .db-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
 .date-line{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:0.09em;text-transform:uppercase;margin-bottom:5px;}
 .greeting{font-size:22px;font-weight:400;color:var(--text);letter-spacing:-0.02em;}
@@ -232,57 +236,17 @@ input,button,textarea,select{font-family:var(--font);}
     <div class="news-panels">
       <div class="news-panel">
         <div class="news-panel-header">
-          <span class="news-panel-label global">Global Markets</span>
+          <span class="news-panel-label global">Global News</span>
+          <button class="news-refresh" onclick="fetchGlobalNews()" title="Refresh">&#8635;</button>
         </div>
-        <div class="news-link-list">
-          <a class="news-link-item" href="https://www.cnbc.com/markets/" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">CNBC Markets</span>
-            <span class="news-link-sub">cnbc.com</span>
-          </a>
-          <a class="news-link-item" href="https://www.wsj.com/news/markets" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">WSJ Markets</span>
-            <span class="news-link-sub">wsj.com</span>
-          </a>
-          <a class="news-link-item" href="https://www.bloomberg.com/markets" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">Bloomberg Markets</span>
-            <span class="news-link-sub">bloomberg.com</span>
-          </a>
-          <a class="news-link-item" href="https://www.federalreserve.gov/newsevents.htm" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">Federal Reserve News</span>
-            <span class="news-link-sub">federalreserve.gov</span>
-          </a>
-        </div>
+        <div class="news-list" id="global-news-list"><div class="news-loading-msg">Loading headlines...</div></div>
       </div>
       <div class="news-panel">
         <div class="news-panel-header">
-          <span class="news-panel-label mf">Multifamily / CRE</span>
+          <span class="news-panel-label mf">Multifamily News</span>
+          <button class="news-refresh" onclick="fetchMFNews()" title="Refresh">&#8635;</button>
         </div>
-        <div class="news-link-list">
-          <a class="news-link-item" href="https://www.costar.com/news" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">CoStar News</span>
-            <span class="news-link-sub">costar.com</span>
-          </a>
-          <a class="news-link-item" href="https://www.bisnow.com/national/news/multifamily" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">Bisnow Multifamily</span>
-            <span class="news-link-sub">bisnow.com</span>
-          </a>
-          <a class="news-link-item" href="https://www.globest.com/" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">GlobeSt</span>
-            <span class="news-link-sub">globest.com</span>
-          </a>
-          <a class="news-link-item" href="https://therealdeal.com/section/national/" target="_blank" rel="noopener">
-            <div class="news-link-dot"></div>
-            <span class="news-link-name">The Real Deal</span>
-            <span class="news-link-sub">therealdeal.com</span>
-          </a>
-        </div>
+        <div class="news-list" id="mf-news-list"><div class="news-loading-msg">Loading headlines...</div></div>
       </div>
     </div>
     <div class="db-header">
@@ -373,6 +337,7 @@ input,button,textarea,select{font-family:var(--font);}
 </div>
 <script>
 const KEY='dd_v9';
+const NEWSDATA_KEY='pub_c6f650b7fade4c7bb6299518dd834700';
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const GREETINGS=["let's close deals.","time to move iron.","who's calling back today?","deals don't call themselves.","make it count."];
@@ -457,21 +422,37 @@ function updateProgress(){
   document.getElementById('prog-num').textContent=`${done}/3`;
   document.getElementById('prog-fill').style.width=`${(done/3)*100}%`;
 }
-async function fetchTreasury(){
-  const rateEl=document.getElementById('tsy-rate');
-  const chgEl=document.getElementById('tsy-chg');
+function renderNewsList(containerId,items){
+  const container=document.getElementById(containerId);container.innerHTML='';
+  if(!items.length){container.innerHTML='<div class="news-loading-msg">No headlines available</div>';return;}
+  items.forEach(a=>{
+    const link=mk('a','news-item');link.href=a.url;link.target='_blank';link.rel='noopener';
+    const dot=mk('div','news-item-dot');
+    const body=mk('div','news-item-body');
+    const hl=mk('span','news-item-hl');hl.textContent=a.title;
+    const meta=mk('span','news-item-meta');meta.textContent=a.source+(a.date?' · '+a.date:'');
+    body.appendChild(hl);body.appendChild(meta);link.appendChild(dot);link.appendChild(body);container.appendChild(link);
+  });
+}
+async function fetchGlobalNews(){
+  const container=document.getElementById('global-news-list');
+  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
   try{
-    const r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=5d');
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&category=business&prioritydomain=top&size=3`);
     const j=await r.json();
-    const closes=j.chart.result[0].indicators.quote[0].close.filter(v=>v!==null);
-    const cur=closes[closes.length-1];
-    const prev=closes.length>1?closes[closes.length-2]:cur;
-    const chg=cur-prev;
-    rateEl.textContent=cur.toFixed(2)+'%';
-    if(Math.abs(chg)<0.001){chgEl.textContent='';chgEl.className='tsy-chg flat';}
-    else if(chg>0){chgEl.textContent='▲ +'+chg.toFixed(2);chgEl.className='tsy-chg up';}
-    else{chgEl.textContent='▼ '+chg.toFixed(2);chgEl.className='tsy-chg dn';}
-  }catch(e){rateEl.textContent='—';chgEl.textContent='';}
+    if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
+    renderNewsList('global-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
+  }catch(e){document.getElementById('global-news-list').innerHTML=`<div class="news-loading-msg">Could not load</div>`;}
+}
+async function fetchMFNews(){
+  const container=document.getElementById('mf-news-list');
+  container.innerHTML='<div class="news-loading-msg">Loading...</div>';
+  try{
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=multifamily%20OR%20%22commercial%20real%20estate%22%20OR%20%22housing%20market%22&prioritydomain=top&size=3`);
+    const j=await r.json();
+    if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
+    renderNewsList('mf-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
+  }catch(e){document.getElementById('mf-news-list').innerHTML=`<div class="news-loading-msg">Could not load</div>`;}
 }
 function renderTop3(){
   const grid=document.getElementById('top3-grid');grid.innerHTML='';
@@ -679,7 +660,7 @@ function renderArchive(){
 function clearArchive(){if(confirm('Permanently delete all archived items?')){state.archive=[];save();renderArchive();}}
 function confirmReset(){if(confirm('Reset everything including archive?')){state=defaultState();save();init();}}
 function init(){
-  setDate();fetchTreasury();
+  setDate();fetchGlobalNews();fetchMFNews();
   renderTop3();renderDeals();renderWeek();renderIntel();renderInbox();renderCadence();initNotes();updateBadge();
   document.getElementById('deal-add-btn').addEventListener('click',addDeal);
   ['deal-name','deal-stage-in','deal-next-in'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')addDeal();});});
