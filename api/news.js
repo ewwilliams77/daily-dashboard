@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       const block = match[1];
       const title = (block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || block.match(/<title>(.*?)<\/title>/))?.[1]?.trim();
       const link = (block.match(/<link>(.*?)<\/link>/) || block.match(/<guid>(.*?)<\/guid>/))?.[1]?.trim();
-      if (title && link) { items.push({ title, link }); break; }
+      if (title && link) { items.push({ title, link }); if(items.length>=1) break; }
     }
     res.json({ items });
   } catch(e) {
