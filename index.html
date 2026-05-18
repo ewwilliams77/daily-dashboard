@@ -488,7 +488,7 @@ async function fetchGlobalNews(){
   const container=document.getElementById('global-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
   try{
-    const q=encodeURIComponent('("stock market" OR "S&P 500" OR "Federal Reserve" OR "treasury yield" OR "interest rate" OR "Dow Jones" OR "trade tariff" OR "oil price") AND (market OR economy OR financial)');
+    const q=encodeURIComponent('"Dow Jones" OR "S&P 500" OR "Federal Reserve" OR "treasury yield" OR "interest rates" OR "trade war" OR "oil prices" OR "inflation" OR "recession"');
     const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=3`);
     const j=await r.json();
     if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
@@ -499,7 +499,7 @@ async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
   try{
-    const q=encodeURIComponent('("multifamily" OR "apartment REIT" OR "build-to-rent" OR "BTR" OR "commercial real estate" OR "housing act" OR "Blackstone" OR "Greystar" OR "cap rate") AND (investment OR acquisition OR fund OR deal OR market)');
+    const q=encodeURIComponent('"multifamily" OR "build-to-rent" OR "apartment REIT" OR "commercial real estate" OR "housing act" OR "Blackstone real estate" OR "Greystar" OR "cap rate" OR "CRE"');
     const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=3`);
     const j=await r.json();
     if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
