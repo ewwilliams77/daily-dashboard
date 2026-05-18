@@ -488,7 +488,7 @@ async function fetchGlobalNews(){
   const container=document.getElementById('global-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
   try{
-    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&category=business,politics,world&size=5`);
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&domain=cnbc,wsj,reuters,ft,bloomberg&category=business&size=3`);
     const j=await r.json();
     if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
     renderNewsList('global-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
@@ -498,7 +498,7 @@ async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
   try{
-    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=multifamily%20OR%20%22real%20estate%22%20OR%20%22housing%20market%22%20OR%20REIT&size=5`);
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&domain=globest,bisnow,costar,therealdeal,multifamilyexecutive&size=3`);
     const j=await r.json();
     if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
     renderNewsList('mf-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
