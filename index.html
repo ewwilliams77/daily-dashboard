@@ -497,6 +497,7 @@ async function fetchMFNews(){
       })
       .catch(()=>{hl.textContent='Could not load';row.style.opacity='0.3';});
   }
+}
 function renderTop3(){
   const grid=document.getElementById('top3-grid');grid.innerHTML='';
   state.top3.forEach((p,pi)=>{
