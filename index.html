@@ -472,10 +472,10 @@ async function fetchMFNews(){
 const feeds=[
     {url:'https://www.bisnow.com/rss',name:'Bisnow'},
     {url:'https://www.housingwire.com/feed/',name:'HousingWire'},
-    {url:'https://www.worldpropertyjournal.com/real-estate-news-rss-feed.php',name:'World Property Journal'},
-    {url:'https://feeds.feedburner.com/inmannews',name:'Inman'},
+    {url:'https://commercialsearch.com/news/feed/',name:'Commercial Property Executive'},
+    {url:'https://www.wealthmanagement.com/rss.xml',name:'WMRE'},
   ];
-  for(const f of feeds){
+    for(const f of feeds){
     const row=document.createElement('div');row.className='news-item';row.style.opacity='0.5';
     const dot=document.createElement('div');dot.className='news-item-dot';
     const body=document.createElement('div');body.className='news-item-body';
