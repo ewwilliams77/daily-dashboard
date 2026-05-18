@@ -469,11 +469,11 @@ async function fetchGlobalNews(){
 async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
   container.innerHTML='';
-  const feeds=[
+const feeds=[
     {url:'https://www.bisnow.com/rss',name:'Bisnow'},
     {url:'https://www.housingwire.com/feed/',name:'HousingWire'},
-    {url:'https://www.multifamilyexecutive.com/rss/news',name:'Multifamily Executive'},
-    {url:'https://therealdeal.com/feed/',name:'The Real Deal'},
+    {url:'https://www.worldpropertyjournal.com/real-estate-news-rss-feed.php',name:'World Property Journal'},
+    {url:'https://feeds.feedburner.com/inmannews',name:'Inman'},
   ];
   for(const f of feeds){
     const row=document.createElement('div');row.className='news-item';row.style.opacity='0.5';
