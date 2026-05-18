@@ -487,43 +487,24 @@ function renderNewsList(containerId,items){
 async function fetchGlobalNews(){
   const container=document.getElementById('global-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
-  const feeds=[
-    {url:'https://www.cnbc.com/id/100003114/device/rss/rss.html',name:'CNBC'},
-    {url:'https://feeds.reuters.com/reuters/businessNews',name:'Reuters'},
-  ];
-  const all=[];
-  for(const f of feeds){
-    try{
-      const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=3`);
-      const j=await r.json();
-      if(j.status==='ok'&&j.items.length){
-        all.push(...j.items.slice(0,2).map(a=>({title:a.title,url:a.link,source:f.name,date:a.pubDate?a.pubDate.slice(0,10):''})));
-      }
-    }catch(e){}
-  }
-  if(!all.length){document.getElementById('global-news-list').innerHTML='<div class="news-loading-msg">Could not load headlines</div>';return;}
-  renderNewsList('global-news-list',all.slice(0,3));
+  try{
+    const q=encodeURIComponent('("stock market" OR "S&P 500" OR "Federal Reserve" OR "treasury yield" OR "interest rate" OR "Dow Jones" OR "trade tariff" OR "oil price") AND (market OR economy OR financial)');
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=3`);
+    const j=await r.json();
+    if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
+    renderNewsList('global-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
+  }catch(e){document.getElementById('global-news-list').innerHTML=`<div class="news-loading-msg">Could not load — ${e.message}</div>`;}
 }
 async function fetchMFNews(){
   const container=document.getElementById('mf-news-list');
   container.innerHTML='<div class="news-loading-msg">Loading...</div>';
-  const feeds=[
-    {url:'https://www.globest.com/feed/',name:'GlobeSt'},
-    {url:'https://www.bisnow.com/rss',name:'Bisnow'},
-    {url:'https://www.costar.com/rss',name:'CoStar'},
-  ];
-  const all=[];
-  for(const f of feeds){
-    try{
-      const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=3`);
-      const j=await r.json();
-      if(j.status==='ok'&&j.items.length){
-        all.push(...j.items.slice(0,2).map(a=>({title:a.title,url:a.link,source:f.name,date:a.pubDate?a.pubDate.slice(0,10):''})));
-      }
-    }catch(e){}
-  }
-  if(!all.length){document.getElementById('mf-news-list').innerHTML='<div class="news-loading-msg">Could not load headlines</div>';return;}
-  renderNewsList('mf-news-list',all.slice(0,3));
+  try{
+    const q=encodeURIComponent('("multifamily" OR "apartment REIT" OR "build-to-rent" OR "BTR" OR "commercial real estate" OR "housing act" OR "Blackstone" OR "Greystar" OR "cap rate") AND (investment OR acquisition OR fund OR deal OR market)');
+    const r=await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&language=en&q=${q}&size=3`);
+    const j=await r.json();
+    if(j.status!=='success'||!j.results||!j.results.length)throw new Error(j.message||'no results');
+    renderNewsList('mf-news-list',j.results.map(a=>({title:a.title,url:a.link,source:a.source_id||'',date:a.pubDate?a.pubDate.slice(0,10):''})));
+  }catch(e){document.getElementById('mf-news-list').innerHTML=`<div class="news-loading-msg">Could not load — ${e.message}</div>`;}
 }
 function renderTop3(){
   const grid=document.getElementById('top3-grid');grid.innerHTML='';
